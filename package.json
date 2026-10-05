@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "start": "vite dev",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "node watch-tests.js"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5",
+    "vitest": "^5.0.3"
+  }
+}

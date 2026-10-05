@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr Smiles Dentistry — Book an Appointment</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>🦷 Mr Smiles Dentistry</h1>
+  </header>
+
+  <main class="card">
+    <h2>Book an Appointment</h2>
+    <label for="date-input">Date</label>
+    <input type="date" id="date-input" min="" />
+
+    <label for="duration-select">Service duration</label>
+    <select id="duration-select">
+      <option value="15">15 min: Quick check-up</option>
+      <option value="30">30 min: Polish</option>
+      <option value="45">45 min: Scrape & Polish</option>
+      <option value="60">60 min: Full session</option>
+    </select>
+
+    <button id="show-slots-btn">Show available slots</button>
+
+    <h2 class="hidden">Available times</h2>
+    <ul id="results"></ul>
+
+    <button id="book-now-btn" class="hidden">Book now</button>
+    <p id="booking-message" class="hidden">Appointment booked!</p>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

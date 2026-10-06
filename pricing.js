@@ -25,22 +25,24 @@ export function applyDiscount(subtotal, code) {
     return {
       subtotal,
       discount: 0,
-      total: subtotal,
+      total: Number(subtotal.toFixed(2)),
     };
   }
 
-  const discount = subtotal * discountRate;
+  const discount = Number((subtotal * discountRate).toFixed(2));
+  const total = Number((subtotal - discount).toFixed(2));
+
   return {
     subtotal,
     discount,
-    total: subtotal - discount,
+    total,
   };
 }
 
 export function calculateCheckoutTotal(duration, addonPrices = [], code = '') {
   const base = getBasePrice(duration);
   const addonTotal = addonPrices.reduce((sum, price) => sum + Number(price || 0), 0);
-  const subtotal = base + addonTotal;
+  const subtotal = Number((base + addonTotal).toFixed(2));
   const { discount, total } = applyDiscount(subtotal, code);
 
   return {

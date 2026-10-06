@@ -12,7 +12,7 @@ describe('discount pricing', () => {
 
   it('accepts the discount code case-insensitively', () => {
     expect(getDiscountRate('smile15')).toBe(0.15);
-    expect(calculateCheckoutTotal(60, [57.49], 'smile15').total).toBeCloseTo(246.4915, 4);
+    expect(calculateCheckoutTotal(60, [57.49], 'smile15').total).toBeCloseTo(246.49, 2);
   });
 
   it('does not apply a discount for invalid or missing codes', () => {

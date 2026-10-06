@@ -77,3 +77,18 @@ npm run start
 ```
 
 If this project is extended with Vitest, the characterization tests should be written around a fixed future date range and should assert the current service behavior rather than an assumed ideal version.
+
+### Prompt history and tasks
+
+These are the prompts and requirements given during the project, along with the corresponding work that was completed:
+
+- "fill in the ignore file with standard ignore files" — added a standard Node/Vite ignore file covering dependencies, build output, logs, environment files, and editor metadata.
+- "populate the README.md file with how the characterization test works" — wrote a README section explaining what characterization tests capture, how the fixed-date week works, and what behaviors the scheduler test suite validates.
+- "do whats on `prompt.md`" — implemented the requested Vitest characterization test suite for `getAvailableSlots`, using a fixed future week and covering business hours, lunch blocking, rounding, buffers, closed dates, overrides, and edge cases.
+- "run `scheduler.test.js` every time `scheduler.js` is changed" — added a change-watcher script and npm script so the test file re-runs whenever the scheduler logic changes.
+- "refactor the code in `scheduler.js`" — cleaned up the scheduler implementation while preserving the real behavior that the characterization tests describe.
+- "do so please" — refactored the UI layer in `app.js` to align with the cleaned scheduler logic and removed inconsistencies in the slot rendering flow.
+- "Add a discount code option. When the user inputs `SMILE15` apply a 15% discount. Create tests using Vitest to verify it works." — added a checkout discount field, implemented a 15% discount for `SMILE15`, and created pricing tests covering valid, invalid, and case-insensitive discount codes.
+- "revamp the discount part so that its only done to the total and the new total amount is rounded up to 2 decimal places." — updated the pricing logic so the discount is applied only to the final total, and the discounted total is rounded to two decimal places before display.
+
+This section documents the flow of requests that shaped the project and keeps the working assumptions explicit for future maintainers.

@@ -3,6 +3,7 @@
 // No business logic lives here on purpose — keep it all in scheduler.js.
 
 import { getAvailableSlots, DEFAULT_BUSINESS_HOURS } from './scheduler.js';
+import { calculateCheckoutTotal } from './pricing.js';
 
 // Hardcoded "existing bookings" standing in for a real calendar/backend.
 const existingBookings = [
@@ -146,17 +147,6 @@ showSlotsBtn.addEventListener('click', handleShowSlots);
 
 // ---------- Pricing ----------
 
-const PRICE_MAP = {
-  15: 102.5,
-  30: 142.5,
-  45: 187.5,
-  60: 232.5,
-};
-
-function getBasePrice(duration) {
-  return PRICE_MAP[duration] || 100;
-}
-
 // ---------- Checkout ----------
 
 const checkoutEl = document.getElementById('checkout');
@@ -165,6 +155,8 @@ const checkoutTimeEl = document.getElementById('checkout-time');
 const checkoutDurationLabel = document.getElementById('checkout-duration-label');
 const basePriceEl = document.getElementById('base-price');
 const totalPriceEl = document.getElementById('total-price');
+const discountCodeEl = document.getElementById('discount-code');
+const discountValueEl = document.getElementById('discount-value');
 const confirmBtn = document.getElementById('confirm-btn');
 const backBtn = document.getElementById('back-btn');
 const addonCheckboxes = document.querySelectorAll('.addon-checkbox');
@@ -174,14 +166,26 @@ function formatPrice(amount) {
 }
 
 function updateTotal() {
-  const base = getBasePrice(Number(durationSelect.value));
-  let addonTotal = 0;
-  addonCheckboxes.forEach((cb) => {
-    if (cb.checked) addonTotal += Number(cb.dataset.price);
-  });
-  const total = base + addonTotal;
+  const duration = Number(durationSelect.value);
+  const addonPrices = Array.from(addonCheckboxes)
+    .filter((cb) => cb.checked)
+    .map((cb) => Number(cb.dataset.price));
+  const enteredCode = discountCodeEl ? discountCodeEl.value : '';
+
+  const { base, subtotal, discount, total } = calculateCheckoutTotal(duration, addonPrices, enteredCode);
+
   basePriceEl.textContent = formatPrice(base);
   totalPriceEl.textContent = formatPrice(total);
+
+  if (discount > 0) {
+    discountValueEl.textContent = `-${formatPrice(discount)}`;
+  } else {
+    discountValueEl.textContent = '-$0.00';
+  }
+
+  if (subtotal <= base) {
+    discountValueEl.textContent = '-$0.00';
+  }
 }
 
 function showCheckout() {
@@ -194,8 +198,10 @@ function showCheckout() {
   checkoutTimeEl.textContent = selectedSlot;
   checkoutDurationLabel.textContent = durationLabel;
 
-  // Reset add-ons
+  // Reset add-ons and discount
   addonCheckboxes.forEach((cb) => (cb.checked = false));
+  if (discountCodeEl) discountCodeEl.value = '';
+  if (discountValueEl) discountValueEl.textContent = '-$0.00';
 
   updateTotal();
 
@@ -224,6 +230,10 @@ bookNowBtn.addEventListener('click', () => {
 addonCheckboxes.forEach((cb) => {
   cb.addEventListener('change', updateTotal);
 });
+
+if (discountCodeEl) {
+  discountCodeEl.addEventListener('input', updateTotal);
+}
 
 confirmBtn.addEventListener('click', () => {
   const dateParts = dateInput.value.split('-');

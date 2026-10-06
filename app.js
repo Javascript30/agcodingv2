@@ -17,7 +17,7 @@ const closedDates = [
   '2026-08-15', // One-off day off
   '2027-01-01', // New Year's Day
 ];
-
+ 
 const dateInput = document.getElementById('date-input');
 const durationSelect = document.getElementById('duration-select');
 const showSlotsBtn = document.getElementById('show-slots-btn');
@@ -28,50 +28,34 @@ const bookingMessage = document.getElementById('booking-message');
 
 let selectedSlot = null;
 
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-function formatDateInput(date) {
-  return date.toISOString().split('T')[0];
-}
-
-function parseDateValue(dateValue) {
-  return new Date(`${dateValue}T12:00:00`);
-}
-
 // Default to tomorrow, prevent selecting past dates.
-const tomorrow = new Date(getToday());
-tomorrow.setDate(tomorrow.getDate() + 1);
-dateInput.value = formatDateInput(tomorrow);
-dateInput.min = formatDateInput(getToday());
+const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(today.getDate() + 1);
+dateInput.value = tomorrow.toISOString().split('T')[0];
+dateInput.min = today.toISOString().split('T')[0];
 
 function toMinutes(time) {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
 }
 
-function toTime(totalMinutes) {
-  const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
-  const minutes = (totalMinutes % 60).toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
+function toTime(mins) {
+  const h = Math.floor(mins / 60).toString().padStart(2, '0');
+  const m = (mins % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
 }
 
 function generateAllSlots(date) {
   const dayOfWeek = date.getDay();
   const hoursToday = DEFAULT_BUSINESS_HOURS[dayOfWeek];
   if (!hoursToday) return [];
-
   const dayStart = toMinutes(hoursToday.start);
   const dayEnd = toMinutes(hoursToday.end);
   const slots = [];
-
-  for (let minutes = dayStart; minutes + 15 <= dayEnd; minutes += 15) {
-    slots.push(toTime(minutes));
+  for (let m = dayStart; m + 15 <= dayEnd; m += 15) {
+    slots.push(toTime(m));
   }
-
   return slots;
 }
 
@@ -105,13 +89,8 @@ function renderAllSlots(allSlots, availableSlots) {
     } else {
       li.classList.add('unavailable');
     }
-
     resultsEl.appendChild(li);
   });
-}
-
-function renderSlots(date, availableSlots = []) {
-  renderAllSlots(generateAllSlots(date), availableSlots);
 }
 
 // Randomly remove some available slots on Mon–Thu to introduce variety.
@@ -139,39 +118,121 @@ function handleShowSlots() {
 
   const dateValue = dateInput.value;
   if (!dateValue) {
-    renderAllSlots([], []);
+    renderSlots([]);
     return;
   }
 
-  const date = parseDateValue(dateValue);
+  // new Date('YYYY-MM-DD') parses as UTC midnight — fine for this demo,
+  // just worth knowing if slots look "off by a day" in some timezones.
+  const date = new Date(dateValue);
 
   // Don't allow booking for past dates.
-  if (date < getToday()) {
-    renderAllSlots([], []);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date < today) {
+    renderSlots([]);
     return;
   }
 
   const duration = Number(durationSelect.value);
+
   const allSlots = generateAllSlots(date);
   let availableSlots = getAvailableSlots(date, existingBookings, duration, DEFAULT_BUSINESS_HOURS, closedDates);
   availableSlots = randomlyReduceSlots(availableSlots, date);
-
   renderAllSlots(allSlots, availableSlots);
 }
 
 showSlotsBtn.addEventListener('click', handleShowSlots);
 
-bookNowBtn.addEventListener('click', () => {
-  if (!selectedSlot) return;
-  
+// ---------- Pricing ----------
+
+const PRICE_MAP = {
+  15: 102.5,
+  30: 142.5,
+  45: 187.5,
+  60: 232.5,
+};
+
+function getBasePrice(duration) {
+  return PRICE_MAP[duration] || 100;
+}
+
+// ---------- Checkout ----------
+
+const checkoutEl = document.getElementById('checkout');
+const checkoutDateEl = document.getElementById('checkout-date');
+const checkoutTimeEl = document.getElementById('checkout-time');
+const checkoutDurationLabel = document.getElementById('checkout-duration-label');
+const basePriceEl = document.getElementById('base-price');
+const totalPriceEl = document.getElementById('total-price');
+const confirmBtn = document.getElementById('confirm-btn');
+const backBtn = document.getElementById('back-btn');
+const addonCheckboxes = document.querySelectorAll('.addon-checkbox');
+
+function formatPrice(amount) {
+  return Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+}
+
+function updateTotal() {
+  const base = getBasePrice(Number(durationSelect.value));
+  let addonTotal = 0;
+  addonCheckboxes.forEach((cb) => {
+    if (cb.checked) addonTotal += Number(cb.dataset.price);
+  });
+  const total = base + addonTotal;
+  basePriceEl.textContent = formatPrice(base);
+  totalPriceEl.textContent = formatPrice(total);
+}
+
+function showCheckout() {
   const dateParts = dateInput.value.split('-');
   const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-  
-  bookingMessage.textContent = `Appointment booked for ${displayDate} at ${selectedSlot}!`;
+  const duration = Number(durationSelect.value);
+  const durationLabel = durationSelect.options[durationSelect.selectedIndex].text;
 
-  bookNowBtn.classList.add('hidden');
+  checkoutDateEl.textContent = displayDate;
+  checkoutTimeEl.textContent = selectedSlot;
+  checkoutDurationLabel.textContent = durationLabel;
+
+  // Reset add-ons
+  addonCheckboxes.forEach((cb) => (cb.checked = false));
+
+  updateTotal();
+
+  // Hide booking UI, show checkout
   showSlotsBtn.classList.add('hidden');
   slotsHeading.classList.add('hidden');
-  bookingMessage.classList.remove('hidden');
   resultsEl.innerHTML = '';
+  bookNowBtn.classList.add('hidden');
+  bookingMessage.classList.add('hidden');
+  checkoutEl.classList.remove('hidden');
+}
+
+function hideCheckout() {
+  checkoutEl.classList.add('hidden');
+  showSlotsBtn.classList.remove('hidden');
+  slotsHeading.classList.remove('hidden');
+  // Re-render the slots so the user can pick again
+  handleShowSlots();
+}
+
+bookNowBtn.addEventListener('click', () => {
+  if (!selectedSlot) return;
+  showCheckout();
 });
+
+addonCheckboxes.forEach((cb) => {
+  cb.addEventListener('change', updateTotal);
+});
+
+confirmBtn.addEventListener('click', () => {
+  const dateParts = dateInput.value.split('-');
+  const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+  const total = totalPriceEl.textContent;
+
+  bookingMessage.textContent = `Appointment booked for ${displayDate} at ${selectedSlot}! Total: ${total}`;
+  checkoutEl.classList.add('hidden');
+  bookingMessage.classList.remove('hidden');
+});
+
+backBtn.addEventListener('click', hideCheckout);

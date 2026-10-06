@@ -31,6 +31,46 @@
 
     <button id="book-now-btn" class="hidden">Book now</button>
     <p id="booking-message" class="hidden">Appointment booked!</p>
+
+    <!-- Checkout -->
+    <div id="checkout" class="hidden">
+      <h2>Checkout</h2>
+      <div class="checkout-summary">
+        <p><span id="checkout-date"></span> at <span id="checkout-time"></span></p>
+        <p id="checkout-duration-label"></p>
+      </div>
+
+      <div class="checkout-line">
+        <span>Base price</span>
+        <span id="base-price">$0</span>
+      </div>
+
+      <div class="checkout-addons">
+        <label class="addon-option">
+          <input type="checkbox" class="addon-checkbox" data-price="57.49" />
+          <span>Head massage</span>
+          <span class="addon-price">+$57.49</span>
+        </label>
+        <label class="addon-option">
+          <input type="checkbox" class="addon-checkbox" data-price="79.49" />
+          <span>Teeth whitening</span>
+          <span class="addon-price">+$79.49</span>
+        </label>
+        <label class="addon-option">
+          <input type="checkbox" class="addon-checkbox" data-price="37.49" />
+          <span>Fluoride treatment</span>
+          <span class="addon-price">+$37.49</span>
+        </label>
+      </div>
+
+      <div class="checkout-total">
+        <span>Total</span>
+        <span id="total-price">$0</span>
+      </div>
+
+      <button id="confirm-btn">Confirm &amp; Pay</button>
+      <button id="back-btn" class="secondary">Back to slots</button>
+    </div>
   </main>
 
   <script type="module" src="app.js"></script>

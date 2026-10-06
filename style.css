@@ -86,6 +86,10 @@ button:hover {
   background: #1d4ed8;
 }
 
+#confirm-btn {
+  margin-block: 1rem;
+}
+
 ul {
   list-style: none;
   padding: 0;
